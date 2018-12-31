@@ -1,0 +1,5 @@
+--require ts-node/register
+--reporter nyan
+--ui bdd
+--timeout 10000
+./src/**/*.spec.ts

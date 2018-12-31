@@ -1,0 +1,97 @@
+version: 2.1
+executors:
+  npm:
+    environment:
+    working_directory: ~/ngv-swagger-api-generator
+    docker:
+      - image: circleci/node:10-browsers-legacy
+jobs:
+  update_dependencies:
+    executor: npm
+    steps:
+      - checkout
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@latest'
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json"}}
+      - run:
+          name: install-npm
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+  build:
+    executor: npm
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json"}}
+      - run:
+          name: build
+          command: npm run build
+      - store_artifacts:
+          path:
+            - .
+          destination: ngv-swagger-api-generator
+      - save_cache:
+          key: ngv-swagger-api-generator{{ .Environment.CIRCLE_WORKFLOW_ID }}
+          paths:
+            - .
+  deploy-package:
+    executor: npm
+    steps:
+      - restore_cache:
+          key: ngv-swagger-api-generator{{ .Environment.CIRCLE_WORKFLOW_ID }}
+      - run:
+          name: npm publish
+          command: |
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN">.npmrc
+            npm publish --access public
+  test:
+    executor: npm
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json"}}
+      - run:
+          name: test
+          command: npm run test
+      - run:
+          name: coverage
+          command:  bash <(curl -s https://codecov.io/bash)
+workflows:
+  version: 2.1
+  publish:
+    jobs:
+      - update_dependencies:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+              only: master
+            tags:
+              only: /^v.*/
+      - test:
+          requires:
+            - update_dependencies
+          filters:
+            tags:
+              only: /^v.*/
+      - build:
+          requires:
+            - update_dependencies
+          filters:
+            tags:
+              only: /^v.*/
+      - deploy-package:
+          requires:
+            - test
+            - build
+          filters:
+            branches:
+              ignore:
+                - master
+            tags:
+              only: /^v.*/

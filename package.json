@@ -1,0 +1,55 @@
+{
+  "name": "@ng-veteran/ngv-swagger-api-generator",
+  "version": "0.0.6",
+  "description": "",
+  "bin": {
+    "ngv-swagger-api-generator": "./bin/ngv-swagger-api-generator"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "lint": "tslint --config tslint.json --project .",
+    "build": "tsc --build tsconfig.json",
+    "test": "mocha --opts mocha.opts ",
+    "test:coverage": "nyc --reporter html --reporter=text-summary --reporter=clover npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ng-veteran/ngv-swagger-api-generator.git"
+  },
+  "keywords": [
+    "ng-veteran",
+    "swagger",
+    "typescript",
+    "api",
+    "generate",
+    "generator"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ng-veteran/ngv-swagger-api-generator/issues"
+  },
+  "homepage": "https://github.com/ng-veteran/ngv-swagger-api-generator#readme",
+  "dependencies": {
+    "commander": "^2.19.0",
+    "node-fetch": "^2.3.0",
+    "nyc": "^13.3.0",
+    "rxjs": "^6.4.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.6",
+    "@types/node": "^11.10.4",
+    "@types/node-fetch": "^2.1.6",
+    "@types/sinon": "^7.0.8",
+    "@types/sinon-chai": "^3.2.2",
+    "chai": "^4.2.0",
+    "mocha": "^6.0.2",
+    "sinon": "^7.2.7",
+    "sinon-chai": "^3.3.0",
+    "ts-node": "^8.0.2",
+    "tslint": "^5.13.1",
+    "typescript": "^3.3.3333"
+  }
+}

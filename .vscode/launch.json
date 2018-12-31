@@ -1,0 +1,93 @@
+{
+  // 使用 IntelliSense 了解相关属性。
+  // 悬停以查看现有属性的描述。
+  // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [ {
+      "type": "node",
+      "request": "launch",
+      "name": "Mocha Tests",
+      "sourceMaps": true,
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--opts", "mocha.opts"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "openOnFirstSessionStart",
+      "preLaunchTask": "build"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "启动程序-help",
+      "program": "${workspaceFolder}\\src\\index.js",
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/**/*.js"
+      ],
+      "args": [],
+      "preLaunchTask": "build"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "启动程序-xiangyao",
+      "program": "${workspaceFolder}\\src\\index.js",
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/**/*.js"
+      ],
+      "args": [
+        "https://dev.xiangyaochina.com/doc/swagger.json?group=%E7%AE%A1%E7%90%86%E5%91%98%E6%8E%A5%E5%8F%A3%E6%96%87%E6%A1%A3",
+        "-o", "./api/xiangyao"
+      ],
+      "preLaunchTask": "build"
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "启动程序-wsqq",
+      "program": "${workspaceFolder}\\src\\index.js",
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/**/*.js"
+      ],
+      "args": [
+        "https://wsqq.wanshangtech.com/v2/api-docs?group=%E7%AE%A1%E7%90%86%E7%AB%AFapi",
+        "-o", "./api/wsqq"
+      ],
+      "preLaunchTask": "build"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "启动程序-yddg",
+      "program": "${workspaceFolder}\\src\\index.js",
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/**/*.js"
+      ],
+      "args": [
+        "http://120.26.139.183:8181/doc/swagger.json?group=%E6%89%8B%E6%9C%BA%E7%AB%AF%E6%8E%A5%E5%8F%A3%E6%96%87%E6%A1%A3",
+        "-o", "./api/yddg"
+      ],
+      "preLaunchTask": "build"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "启动程序-xyw",
+      "program": "${workspaceFolder}\\src\\index.js",
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/**/*.js"
+      ],
+      "args": [
+        "http://120.26.139.183:8048/v2/api-docs?group=app%E7%AB%AFapi",
+        "-o", "./api/xyw"
+      ],
+      "preLaunchTask": "build"
+    }
+  ]
+}
