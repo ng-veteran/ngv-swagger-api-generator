@@ -31,9 +31,6 @@ jobs:
       - run:
           name: build
           command: npm run build
-      - store_artifacts:
-          path: .
-          destination: ngv-swagger-api-generator
       - save_cache:
           key: ngv-swagger-api-generator{{ .Environment.CIRCLE_WORKFLOW_ID }}
           paths:
