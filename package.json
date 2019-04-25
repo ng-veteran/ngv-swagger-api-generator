@@ -1,6 +1,6 @@
 {
   "name": "@ng-veteran/ngv-swagger-api-generator",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "",
   "bin": {
     "ngv-swagger-api-generator": "./bin/ngv-swagger-api-generator"

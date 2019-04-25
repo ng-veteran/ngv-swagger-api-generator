@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import { from, throwError } from 'rxjs';
 import { mergeMap, tap, catchError } from 'rxjs/operators';
 import { Swagger } from './interface/swagger';
@@ -38,10 +38,15 @@ export class Generator {
           if (!existsSync(output)) {
             mkdirSync(output, { recursive: false });
           }
+          const outputFilePath = `${output}/${filename}.ts`;
+          console.log(`==write ${outputFilePath}...`)
+          if (existsSync(output) && readFileSync(outputFilePath).toString() === content) {
+            console.log('no modify!');
+          } else {
+            writeFileSync(`${outputFilePath}.ts`, content);
+            console.log(`${content}`);
+          }
 
-          console.log(`==write ${output}/${filename}...`)
-          writeFileSync(`${output}/${filename}.ts`, content);
-          console.log(`${content}`);
           console.log(`=====================================ok=====================================`);
         }),
         catchError((error) => {

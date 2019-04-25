@@ -1,4 +1,4 @@
-version: 2.1
+version: 2.0
 executors:
   npm:
     environment:
@@ -62,7 +62,7 @@ jobs:
           name: coverage
           command:  bash <(curl -s https://codecov.io/bash)
 workflows:
-  version: 2.1
+  version: 2.0
   publish:
     jobs:
       - update_dependencies:
