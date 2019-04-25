@@ -1,4 +1,4 @@
-version: 2.0
+version: 2.1
 executors:
   npm:
     environment:
@@ -32,8 +32,7 @@ jobs:
           name: build
           command: npm run build
       - store_artifacts:
-          path:
-            - .
+          path: .
           destination: ngv-swagger-api-generator
       - save_cache:
           key: ngv-swagger-api-generator{{ .Environment.CIRCLE_WORKFLOW_ID }}
@@ -62,7 +61,7 @@ jobs:
           name: coverage
           command:  bash <(curl -s https://codecov.io/bash)
 workflows:
-  version: 2.0
+  version: 2.1
   publish:
     jobs:
       - update_dependencies:
