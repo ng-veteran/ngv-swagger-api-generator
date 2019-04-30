@@ -1,57 +1,72 @@
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
-import { from, throwError } from 'rxjs';
-import { mergeMap, tap, catchError } from 'rxjs/operators';
+import { from, throwError, queueScheduler } from 'rxjs';
+import { mergeMap, tap, catchError, map } from 'rxjs/operators';
 import { Swagger } from './interface/swagger';
-import { SwaggerDefinition } from './interface/swagger-definition';
 import { Translator } from './translator';
 import fetch from 'node-fetch';
-
+import ProgressBar from 'progress'
 export class Generator {
 
   translator = new Translator();
 
   constructor() {
-
-
   }
 
   generate(uri: string, output: string) {
     from(fetch(uri))
       .pipe(
-        mergeMap(resp => from(resp.json())),
-        mergeMap((api: Swagger) => {
-          const definitions = new Array<SwaggerDefinition>();
-          Object.keys(api.definitions)
-            .filter((key) => !/^(Map|List)«[\s\S]*»$/g.test(key))
-            // .filter(key => key === 'HttpResponse«Page«Version»»')
-            .forEach((key) => {
-              definitions.push(api.definitions[key]);
-            });
-          return from(definitions);
-        }),
-        tap(definition => {
-          console.log(`\n=============================================================================`)
-          console.log(`==genearate ${definition.title} ...`)
-          const filename = this.translator.toInterfaceFileName(definition.title);
-          const content = this.translator.toInterface(definition);
+        mergeMap(resp => resp.json()),
+        map((api: Swagger) => Object.keys(api.definitions)
+          .filter((key) => !/^(Map|List)«[\s\S]*»$/g.test(key))
+          .map((key) => {
+            return api.definitions[key];
+          })
+          .filter(definition => definition.title !== undefined)
+        ),
+        tap(definitions => {
+          const bar = new ProgressBar('[:current/:total][:bar] :progress ', definitions.length);
 
-          if (!existsSync(output)) {
-            mkdirSync(output, { recursive: false });
-          }
-          const outputFilePath = `${output}/${filename}.ts`;
-          console.log(`==write ${outputFilePath}...`)
-          if (existsSync(output) && readFileSync(outputFilePath).toString() === content) {
-            console.log('no modify!');
-          } else {
-            writeFileSync(`${outputFilePath}.ts`, content);
-            console.log(`${content}`);
-          }
+          definitions.forEach((definition, index) => {
+            try {
+              bar.render({
+                progress: `genearate ${definition.title} ...`
+              });
 
-          console.log(`=====================================ok=====================================`);
-        }),
-        catchError((error) => {
-          console.error(error);
-          return throwError(error);
+              const filename = this.translator.toInterfaceFileName(definition.title as string);
+              const content = this.translator.toInterface(definition);
+              const outputFile = `${output}/${filename}.ts`;
+
+              if (!existsSync(output)) {
+                mkdirSync(output, { recursive: false });
+              }
+
+              bar.render({
+                progress: `write ${outputFile}...`
+              });
+
+              if (existsSync(outputFile) && readFileSync(outputFile).toString() === content) {
+                bar.render({
+                  progress: `${outputFile} already exists and unchanged`
+                });
+              } else {
+                writeFileSync(outputFile, content);
+                bar.render({
+                  progress: `write ${outputFile} ok`
+                });
+                console.log(`\n write ${definition.title} \n ${outputFile} \n${content}`);
+              }
+
+              if (index + 1 === definitions.length) {
+                bar.render({
+                  progress: `done`
+                });
+              }
+            } catch (error) {
+              console.error(error);
+            } finally {
+              bar.tick();
+            }
+          });
         })
       )
       .subscribe();

@@ -72,7 +72,8 @@
         "http://120.26.139.183:8181/doc/swagger.json?group=%E6%89%8B%E6%9C%BA%E7%AB%AF%E6%8E%A5%E5%8F%A3%E6%96%87%E6%A1%A3",
         "-o", "./api/yddg"
       ],
-      "preLaunchTask": "build"
+      "preLaunchTask": "build",
+      "console": "integratedTerminal"
     },
     {
       "type": "node",

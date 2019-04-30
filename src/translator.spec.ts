@@ -7,6 +7,7 @@ use(sinonChai);
 
 import { Translator } from "./translator";
 import { SwaggerProperty } from './interface/swagger-property';
+import { SwaggerDefinition } from './interface/swagger-definition';
 
 describe('Translator', () => {
   let translator: Translator;
@@ -38,6 +39,11 @@ describe('Translator', () => {
       result.should.to.deep.equal(expected, '解析泛型参数类型');
     });
 
+    it('应该解析"HttpResponse«List«CustomerLandRes»»"', () => {
+
+    });
+
+
     it('应该解析"Page«TransferRecordRes«User,Summary»»"', () => {
       const input = 'Page«TransferRecordRes«User,Summary»»';
       const expected = [
@@ -58,7 +64,6 @@ describe('Translator', () => {
       result.should.to.deep.equal(expected);
     });
 
-
     it('应该解析"Page«TransferRecordRes«User,Summary»,TransferRecordRes1«User1,Summary1»»"', () => {
       const input = 'Page«TransferRecordRes«User,Summary»,TransferRecordRes1«User1,Summary1»»';
       const expected = [
@@ -73,6 +78,8 @@ describe('Translator', () => {
 
       result.should.to.deep.equal(expected);
     });
+
+
   });
 
   describe('#toInterfaceFileName', () => {
@@ -134,7 +141,6 @@ describe('Translator', () => {
     });
 
   });
-
 
   describe('#toPropertyType', () => {
 
@@ -247,5 +253,142 @@ describe('Translator', () => {
       imports.should.to.deep.equal([]);
     });
 
+    it('应该可以转换泛型参数类型Array属性类型', () => {
+      const imports = new Array<string>();
+      const input: SwaggerProperty = {
+        type: "array",
+        items: {
+          $ref: "#/definitions/CustomerLandRes"
+        },
+      } as any;
+
+      const expected = `T0`;
+
+      const stubToImport = stub(translator, 'toImport');
+
+      const result = translator.toPropertyType(input, imports, [
+        [
+          'Array',
+          [
+            ['CustomerLandRes']
+          ]
+        ]
+      ]);
+
+      result.should.to.be.equal(expected);
+      stubToImport.should.to.not.have.called;
+      imports.should.to.deep.equal([]);
+    });
+  });
+
+  describe('#toInterface', () => {
+    it('应该可以生成成员属性数组类型', () => {
+      const input: SwaggerDefinition = {
+        type: "object",
+        properties: {
+          'code': {
+            type: "integer",
+            format: "int32",
+          },
+          'data': {
+            type: "array",
+            items: {
+              $ref: "#/definitions/CustomerLandRes"
+            },
+          },
+          'msg': {
+            type: "string"
+          },
+        },
+        title: "HttpResponse",
+      };
+
+      const expected =
+        `import { ApiCustomerLandRes } from './api-customer-land-res';
+
+/**
+ * undefined
+ */
+export interface ApiHttpResponse {
+  /**
+   * undefined
+   */
+  code: number;
+  /**
+   * undefined
+   */
+  data: Array<ApiCustomerLandRes>;
+  /**
+   * undefined
+   */
+  msg: string;
+}
+`;
+      const result = translator.toInterface(input);
+      result.should.to.be.eq(expected);
+
+    });
+
+    it('应该可以生成泛型参数类型成员属性', () => {
+      const input: SwaggerDefinition = {
+        type: "object",
+        properties: {
+          'code': {
+            type: "integer",
+            format: "int32",
+          },
+          'data': {
+            type: "array",
+            items: {
+              $ref: "#/definitions/CustomerLandRes"
+            },
+          },
+          'msg': {
+            type: "string"
+          },
+        },
+        title: "HttpResponse«List«CustomerLandRes»»",
+      };
+
+      const expected = `
+/**
+ * undefined
+ */
+export interface ApiHttpResponse<T0> {
+  /**
+   * undefined
+   */
+  code: number;
+  /**
+   * undefined
+   */
+  data: T0;
+  /**
+   * undefined
+   */
+  msg: string;
+}
+`;
+      const result = translator.toInterface(input);
+      result.should.to.be.eq(expected);
+
+    });
+
+    it('应该可以生成any类型成员属性', () => {
+      const input: SwaggerDefinition = {
+        type: "object",
+        title: "HttpResponse",
+      };
+
+      const expected = `
+/**
+ * undefined
+ */
+export interface ApiHttpResponse {
+  [key: string]: any;
+}
+`;
+      translator.toInterface(input).should.to.be.equal(expected);
+    });
   });
 });

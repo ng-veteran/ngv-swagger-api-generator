@@ -11,7 +11,14 @@ export class Translator {
     let inputObj: { arr: string[], index: number };
     if (isString(input)) {
       inputObj = {
-        arr: input.replace(/\s*«\s*/g, ' < ').replace(/\s*»\s*/g, ' >').replace(/\s*,\s*/g, ' , ').split(' '),
+        arr: input.replace(/\s*«\s*/g, ' < ').replace(/\s*»\s*/g, ' >').replace(/\s*,\s*/g, ' , ').split(' ').map(item => {
+          const jsType = this.toJsValueType(item);
+          if (jsType === 'any') {
+            return item;
+          } else {
+            return jsType;
+          }
+        }),
         index: 0
       }
     } else {
@@ -107,17 +114,17 @@ export class Translator {
 
   toInterface(input: SwaggerDefinition): string {
     const imports = new Array<string>();
-    const name = this.toInterfaceName(input.title);
-    const [, generics] = this.parseGenerics(input.title);
+    const name = this.toInterfaceName(input.title as string);
+    const [, generics] = this.parseGenerics(input.title as string);
     let properties = new Array()
-    if (isNullOrUndefined(input.properties)) {
-      properties.push(`  [key: string]: any;`);
-    } else {
+    if (input.properties) {
       properties.push(
         ...Object.keys(input.properties).map(key => {
-          return this.toProperty(input.properties[key], key, imports, generics);
+          return this.toProperty((input.properties as { [key: string]: SwaggerProperty })[key], key, imports, generics);
         })
       );
+    } else {
+      properties.push(`  [key: string]: any;`);
     }
     return [
       ...imports,
@@ -132,7 +139,7 @@ export class Translator {
     ].join('\n');
   }
 
-  toProperty(input: SwaggerProperty, inputName: string, imports: string[], genericTypes: string[]): string {
+  toProperty(input: SwaggerProperty, inputName: string, imports: string[], genericTypes: any[]): string {
     return [
       `  /**`,
       `   * ${input.description}`,
@@ -142,60 +149,87 @@ export class Translator {
   }
 
   toPropertyType(input: SwaggerProperty, imports: string[], genericTypes: any[]): string {
-    if (['integer', 'double', 'float', 'number'].includes(input.type)) {
-      return 'number';
-    } else if (['string', 'boolean'].includes(input.type)) {
-      return input.type;
-    } else if (['object'].includes(input.type)) {
-      return 'any';
-    } else if (['Map'].includes(input.type)) {
-      return '{[key: string]: any}';
-    } else if (['array', 'List'].includes(input.type)) {
-      const itemType = this.toPropertyType(input.items, imports, genericTypes);
-      return `Array<${itemType}>`;
-    } else if (input.$ref) {
+    let result: string | null = null;
+    if (input.$ref) {
       const [, name] = /#\/definitions\/([^\/]*)$/.exec(input.$ref) as string[];
 
       const [className, classGenerics] = this.parseGenerics(name);
 
-      let result: string | null = null;
-
-      const compare = (name: string, generics: any[], name1: string, generics1: any[]): boolean => {
-        if (name === name) {
-          if (generics === undefined && generics === generics1) {
-            return true;
-          } else if (isArray(generics) && isArray(generics1)) {
-            for (let i = 0; i < generics.length; i++) {
-              const { childName, childGenerics } = generics[i];
-              const { childName1, childGenerics1 } = generics1[i];
-              if (!compare(childName, childGenerics, childName, childGenerics1)) {
-                return false;
-              }
-            }
-            return true;
-          } else {
-            return false;
-          }
-        }
-        return false;
-      };
-
-      if (isArray(genericTypes)) {
-        genericTypes.forEach(([name, generics], index: number) => {
-          if (compare(name, generics, className, classGenerics)) {
-            result = `T${index}`;
-          }
-        });
+      // 查找class泛型参数
+      if (genericTypes instanceof Array) {
+        result = this.toGenericType(genericTypes, className);
       }
 
       if (result === null) {
+        // 增加依赖导致
         this.toImport(name).filter(str => !imports.includes(str)).forEach(str => imports.push(str));
-        return this.toTypeName(name);
-      } else {
-        return result;
+        result = this.toTypeName(name);
       }
 
+    } else {
+      const type = this.toJsValueType(input.type);
 
+      // 查找class泛型参数
+      if (isArray(genericTypes)) {
+        result = this.toGenericType(genericTypes, type)
+      }
+
+      if (result === null) {
+        if (type === 'Array' && input.items) {
+          result = `Array<${this.toPropertyType(input.items, imports, genericTypes)}>`;
+        } else {
+          result = type;
+        }
+      }
+    }
+
+    return result;
+  }
+
+
+  toGenericType(genericTypes: any[], className: any) {
+    let result: string | null = null;
+    genericTypes.forEach(([name], index: number) => {
+      if (name === className) {
+        result = `T${index}`;
+      }
+    });
+    return result;
+  }
+
+  compare(name: string, generics: any[], name1: string, generics1: any[]): boolean {
+    if (name === name) {
+      if (generics === undefined && generics === generics1) {
+        return true;
+      } else if (isArray(generics) && isArray(generics1)) {
+        for (let i = 0; i < generics.length; i++) {
+          const { childName, childGenerics } = generics[i];
+          const { childName1, childGenerics1 } = generics1[i];
+          if (!this.compare(childName, childGenerics, childName, childGenerics1)) {
+            return false;
+          }
+        }
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
+  };
+
+  toJsValueType(apiType?: string) {
+    if (apiType === undefined) {
+      return 'any';
+    } else if (['integer', 'double', 'float', 'number', 'int'].includes(apiType)) {
+      return 'number';
+    } else if (['string', 'boolean'].includes(apiType)) {
+      return apiType;
+    } else if (['object'].includes(apiType)) {
+      return 'any';
+    } else if (['Map'].includes(apiType)) {
+      return '{[key: string]: any}';
+    } else if (['array', 'List'].includes(apiType)) {
+      return `Array`;
     } else {
       return 'any';
     }

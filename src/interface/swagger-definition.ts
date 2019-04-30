@@ -4,21 +4,23 @@ export interface SwaggerDefinition {
   /**
    * 模型描述
    */
-  description: string;
+  description?: string;
   /**
    * 模型标题
    */
-  title: string;
+  title?: string;
 
   /**
    * 必填属性列表
    */
-  required: string[];
+  required?: string[];
 
   /**
    * 属性列表
    */
-  properties: {
+  properties?: {
     [key: string]: SwaggerProperty
   }
+
+  type?: string;
 }

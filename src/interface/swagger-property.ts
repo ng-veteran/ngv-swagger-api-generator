@@ -3,28 +3,30 @@ export interface SwaggerProperty {
   /**
    * 集合引用类型
    */
-  items: SwaggerProperty;
+  items?: SwaggerProperty;
   /**
    * 属性描述
    */
-  description: string;
+  description?: string;
 
   /**
    * 是否允许为空
    */
-  allowEmptyValue: boolean;
+  allowEmptyValue?: boolean;
 
   /**
    *  属性类型
    */
-  type: string;
+  type?: string;
 
   /**
    * 引用类型 '#/definitions/ActDetail'
    */
-  $ref: string;
+  $ref?: string;
   /**
    * 枚举类型
    */
-  enum: string[]
+  enum?: string[]
+
+  format?: string;
 }
