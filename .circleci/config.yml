@@ -58,7 +58,7 @@ jobs:
           path: coverage
       - run:
           name: coverage
-          command: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN
+          command: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -f coverage/coverage-final.json
 workflows:
   version: 2.1
   publish:
